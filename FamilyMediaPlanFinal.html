@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭媒体使用计划 | Family Media Plan</title>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #1A3B5C;
+            --accent: #D65A31;
+            --success: #28a745;      
+            --bg-body: #F4F6F8;
+            --text-main: #2C3E50;
+            --text-light: #7F8C8D;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        body { font-family: 'Inter', "Microsoft YaHei", sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; height: 100vh; overflow: hidden; }
+
+        .app-layout { display: flex; height: 100vh; }
+        .sidebar { width: 280px; background: white; border-right: 1px solid #EAEAEA; display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; }
+        .main-content { flex: 1; overflow-y: auto; padding: 40px; position: relative; scroll-behavior: smooth; }
+
+        .brand-area { padding: 0 24px 24px; border-bottom: 1px solid #F0F0F0; margin-bottom: 16px; }
+        .brand-title { font-size: 20px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+        .brand-subtitle { font-size: 12px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Navigation */
+        .nav-list { flex: 1; overflow-y: auto; padding: 0 16px; }
+        .nav-item { display: flex; align-items: center; padding: 12px 16px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: all 0.2s; color: var(--text-light); font-size: 14px; font-weight: 500; }
+        .nav-item:hover { background-color: #F8F9FA; color: var(--primary); }
+        .nav-item.active { background-color: #EBF5FF; color: var(--primary); font-weight: 600; }
+        .nav-item.active .icon-wrapper { background: var(--primary); color: white; border-color: var(--primary); }
+        .nav-item.completed .icon-wrapper { background-color: var(--success); color: white; border-color: var(--success); }
+        .nav-item.completed { color: var(--success); }
+        .icon-wrapper { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; background: white; border: 1px solid #E0E0E0; font-size: 14px; transition: 0.2s; }
+
+        /* Language Toggle */
+        .lang-toggle { padding: 0 24px 20px; }
+        .lang-btn { width: 100%; padding: 10px; border: 1px solid #E0E0E0; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-main); transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .lang-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        /* Step Header */
+        .step-heading { font-size: 28px; font-weight: 700; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; }
+        .step-heading i { margin-right: 16px; color: var(--accent); background: rgba(214, 90, 49, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .step-desc { color: var(--text-light); font-size: 16px; margin-left: 66px; margin-bottom: 30px; }
+
+        /* Cards */
+        .strategy-container { max-width: 900px; margin: 0 auto 100px; }
+        .card-modern { background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm); border: 1px solid transparent; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .card-modern:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .card-modern.selected-card { border: 1px solid var(--accent); background: #FFFCFA; }
+        .card-accent-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #E0E0E0; transition: 0.3s; }
+        .card-modern.selected-card .card-accent-bar { background: var(--accent); }
+
+        .card-header-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-left: 12px; }
+        .card-title-group h3 { margin: 0 0 6px 0; font-size: 18px; color: var(--text-main); }
+        .card-title-group p { margin: 0; font-size: 14px; color: var(--text-light); }
+
+        .action-pill { background: #F0F2F5; color: var(--text-light); border: none; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .action-pill:hover { background: #E2E6EA; color: var(--primary); }
+        .action-pill.active { background: #FFF3CD; color: #856404; }
+
+        /* Select All Link */
+        .select-all-btn { font-size: 12px; color: var(--accent); cursor: pointer; font-weight: 600; margin-right: 15px; border: none; background: none; }
+        .select-all-btn:hover { text-decoration: underline; }
+
+        .tips-drawer { background: #FFF8E1; border-radius: 8px; padding: 16px; margin: 10px 0 20px 12px; font-size: 14px; color: #5D4037; display: flex; gap: 12px; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Member Chips */
+        .member-grid-modern { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; padding-left: 12px; }
+        .member-chip { display: flex; align-items: center; padding: 10px 14px; background: white; border: 1px solid #E0E0E0; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+        .member-chip:hover { border-color: #BBB; }
+        .member-chip.selected { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 4px 10px rgba(26, 59, 92, 0.3); }
+        .chip-avatar { width: 32px; height: 32px; background: #F0F2F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 14px; color: var(--text-main); }
+        .member-chip.selected .chip-avatar { background: rgba(255,255,255,0.2); color: white; }
+        .chip-check { margin-left: auto; opacity: 0; transform: scale(0.5); transition: 0.2s; }
+        .member-chip.selected .chip-check { opacity: 1; transform: scale(1); }
+
+        /* Setup / Family Form Styles */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-main); font-size: 14px; }
+        .form-input { width: 100%; padding: 12px; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 15px; font-family: inherit; box-sizing: border-box; transition: 0.2s; }
+        .form-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(26,59,92,0.1); }
+        
+        .setup-card { border: 1px solid #EAEAEA; border-radius: 16px; padding: 24px; margin-bottom: 20px; background: white; display: flex; gap: 20px; position: relative; align-items: flex-start; }
+        .setup-avatar-col { flex-shrink: 0; }
+        .setup-avatar-circle { width: 80px; height: 80px; background: #F4F6F8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--primary); border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .setup-info-col { flex: 1; }
+        
+        .age-btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .age-btn { padding: 8px 12px; border: 1px solid #E0E0E0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text-light); transition: 0.2s; }
+        .age-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .age-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .remove-member-btn { position: absolute; top: 16px; right: 16px; color: #ccc; cursor: pointer; transition: 0.2s; font-size: 18px; }
+        .remove-member-btn:hover { color: #d9534f; }
+
+        /* Review Badges */
+        .review-badge { font-size: 12px; background: #EBF5FF; color: var(--primary); padding: 2px 8px; border-radius: 4px; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+        /* Filter Tabs */
+        .filter-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+        .filter-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid #E0E0E0; background: white; color: var(--text-light); cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 2px 6px rgba(26,59,92,0.3); }
+
+        /* Add Custom Box */
+        .add-custom-wrapper { border: 2px dashed #D0D7DE; border-radius: 16px; padding: 20px; background: #FAFBFC; transition: 0.2s; margin-top: 30px; }
+        .add-custom-wrapper:hover { border-color: var(--accent); background: white; }
+        .add-title { font-size: 14px; font-weight: 700; color: var(--text-light); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .custom-input { width: 100%; padding: 12px; border: 1px solid #E0E0E0; border-radius: 8px; margin-bottom: 10px; font-family: inherit; font-size: 15px; box-sizing: border-box; }
+        .custom-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26, 59, 92, 0.1); }
+
+        /* Bottom Bar */
+        .bottom-bar { position: fixed; bottom: 0; left: 280px; right: 0; background: white; padding: 16px 40px; border-top: 1px solid #EAEAEA; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .btn { padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(214, 90, 49, 0.3); }
+        .btn-ghost { background: transparent; color: var(--text-light); }
+        .btn-outline { background: white; border: 2px solid var(--accent); color: var(--accent); padding: 10px 24px; }
+        .btn-outline:hover { background: #FFF5F2; }
+
+        /* PRINT STYLES */
+        @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .sidebar, .bottom-bar, .action-pill, .add-custom-wrapper, .no-print, .select-all-btn { display: none !important; }
+            .app-layout { display: block; height: auto; }
+            .main-content { padding: 0; overflow: visible; height: auto; }
+            .card-modern { box-shadow: none; border: none; page-break-inside: avoid; padding: 0; }
+            
+            /* Ensure checkboxes and filters look correct on paper */
+            .agreement-content { width: 100%; }
+            
+            /* Fix badge printing */
+            .review-badge { 
+                border: 1px solid #000; 
+                background: white !important; 
+                color: black !important; 
+                padding: 1px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState } = React;
+
+    // --- Translations ---
+    const TRANSLATIONS = {
+        zh: {
+            brandTitle: 'FAMILY',
+            brandSubtitle: 'Media Plan',
+            langButton: 'English',
+            steps: [
+                { id: 'setup', label: '家庭档案', desc: '首先设置您的家庭成员。' },
+                { id: 'balance', label: '媒体平衡', desc: '在在线和离线时间之间找到健康的平衡。' },
+                { id: 'communicating', label: '沟通', desc: '我们要如何谈论媒体很重要。' },
+                { id: 'kindness', label: '友善', desc: '在线上保持友善与线下同样重要。' },
+                { id: 'privacy', label: '隐私与安全', desc: '保护我们的数字足迹。' },
+                { id: 'zones', label: '无屏幕区域', desc: '让我们断开连接以重新连接的地方。' },
+                { id: 'content', label: '选择内容', desc: '质量比数量更重要。' },
+                { id: 'together', label: '共同使用', desc: '分享体验。' },
+                { id: 'review', label: '最终协议', desc: '审查并签署您的家庭计划。' }
+            ],
+            ageGroups: [
+                { id: '0-24m', label: '0-24 个月' },
+                { id: '2-5y', label: '2-5 岁' },
+                { id: '6-12y', label: '6-12 岁' },
+                { id: '13-18y', label: '13-18 岁' },
+                { id: 'adult', label: '成人' }
+            ],
+            strategies: {
+                balance: [
+                    { id: 'b1', title: "睡眠优先", subtitle: "设定时间后设备不进卧室。", tips: "提示：屏幕蓝光会欺骗大脑以为是白天。" },
+                    { id: 'b2', title: "体育活动", subtitle: "我们每天优先保证60分钟的体育活动。", tips: "提示：健康的身体支持健康的心理。" }
+                ],
+                communicating: [
+                    { id: 'c1', title: "开放对话", subtitle: "我们讨论在网上看到的内容，即使是不舒服的内容。", tips: "提示：保持好奇，不要愤怒。" }
+                ],
+                kindness: [
+                    { id: 'k1', title: "广告牌规则", subtitle: "我不会发布任何我不希望出现在广告牌上的内容。", tips: "提示：如果你不会对奶奶说，就不要在网上说。" }
+                ],
+                privacy: [
+                    { id: 'p1', title: "关闭定位", subtitle: "关闭社交媒体的定位服务。", tips: "提示：一起检查应用权限。" }
+                ],
+                zones: [
+                    { id: 'z1', title: "无设备晚餐", subtitle: "餐桌是用来吃饭和交流的。", tips: "理由：改善心理健康和家庭纽带。" }
+                ],
+                content: [
+                    { id: 'co1', title: "质量胜于数量", subtitle: "选择鼓励创造力的应用。", tips: "提示：寻找'3C'：内容 (Content)、环境 (Context) 和孩子 (Child)。" }
+                ],
+                together: [
+                    { id: 't1', title: "共同观看", subtitle: "每周一起看电影或玩游戏。", tips: "理由：将被动的屏幕时间转化为亲子时间。" }
+                ]
+            },
+            setup: {
+                familyNameLabel: '输入您的家庭姓氏 *',
+                familyNamePlaceholder: '例如：张家',
+                myFamily: '我的家庭',
+                addMember: '添加其他家庭成员',
+                memberNameLabel: '家庭成员姓名 *',
+                memberNamePlaceholder: '输入姓名',
+                ageLabel: '年龄',
+                unnamed: '未命名'
+            },
+            buttons: {
+                selectAll: '全选',
+                deselectAll: '取消全选',
+                back: '返回',
+                next: '下一步',
+                addRule: '添加规则',
+                print: '打印协议'
+            },
+            custom: {
+                addTitle: '添加您自己的',
+                addRule: '规则',
+                titlePlaceholder: '规则标题',
+                reasonPlaceholder: '理由（可选）',
+                defaultSubtitle: '我家自定义规则',
+                defaultTip: '提示：当全家都同意后果时，自定义规则效果最好。'
+            },
+            review: {
+                allFamily: '全体家庭',
+                mediaAgreement: '媒体协议',
+                mediaPlan: '的媒体计划',
+                familyMediaAgreement: '家庭媒体协议',
+                parentSignature: '家长签名',
+                studentSignature: '学生 签名',
+                childSignature: '孩子 签名'
+            }
+        },
+        en: {
+            brandTitle: 'FAMILY',
+            brandSubtitle: 'Media Plan',
+            langButton: '中文',
+            steps: [
+                { id: 'setup', label: 'Family Profile', desc: 'Set up your family members first.' },
+                { id: 'balance', label: 'Media Balance', desc: 'Find a healthy balance between online and offline time.' },
+                { id: 'communicating', label: 'Communicating', desc: 'How we talk about media matters.' },
+                { id: 'kindness', label: 'Kindness', desc: 'Being kind online is just as important as offline.' },
+                { id: 'privacy', label: 'Privacy & Safety', desc: 'Protecting our digital footprint.' },
+                { id: 'zones', label: 'Screen Free Zones', desc: 'Places where we disconnect to reconnect.' },
+                { id: 'content', label: 'Choosing Content', desc: 'Quality matters more than quantity.' },
+                { id: 'together', label: 'Using Together', desc: 'Share the experience.' },
+                { id: 'review', label: 'Final Agreement', desc: 'Review and sign your family plan.' }
+            ],
+            ageGroups: [
+                { id: '0-24m', label: '0-24 months' },
+                { id: '2-5y', label: '2-5 years' },
+                { id: '6-12y', label: '6-12 years' },
+                { id: '13-18y', label: '13-18 years' },
+                { id: 'adult', label: 'Adult' }
+            ],
+            strategies: {
+                balance: [
+                    { id: 'b1', title: "Sleep First", subtitle: "Devices stay out of the bedroom after a set time.", tips: "Tip: Blue light from screens can trick the brain into thinking it's daytime." },
+                    { id: 'b2', title: "Physical Activity", subtitle: "We prioritize 60 minutes of physical play every day.", tips: "Tip: Healthy bodies support healthy minds." }
+                ],
+                communicating: [
+                    { id: 'c1', title: "Open Dialogue", subtitle: "We talk about what we see online, even the uncomfortable stuff.", tips: "Tip: Stay curious, not furious." }
+                ],
+                kindness: [
+                    { id: 'k1', title: "The Billboard Rule", subtitle: "I will not post anything I wouldn't want on a billboard.", tips: "Tip: If you wouldn't say it to Grandma, don't say it online." }
+                ],
+                privacy: [
+                    { id: 'p1', title: "Location Off", subtitle: "Location services off for social media.", tips: "Tip: Review app permissions together." }
+                ],
+                zones: [
+                    { id: 'z1', title: "Device-Free Dinner", subtitle: "Dining table is for food and conversation.", tips: "Reason: Improves mental health and family bonds." }
+                ],
+                content: [
+                    { id: 'co1', title: "Quality over Quantity", subtitle: "Choose apps that encourage creativity.", tips: "Tip: Look for the '3 Cs': Content, Context, and Child." }
+                ],
+                together: [
+                    { id: 't1', title: "Co-Viewing", subtitle: "Watch movies or play games together weekly.", tips: "Reason: Turns passive screen time into bonding time." }
+                ]
+            },
+            setup: {
+                familyNameLabel: 'Enter your family name *',
+                familyNamePlaceholder: 'e.g., The Smiths',
+                myFamily: 'My Family',
+                addMember: 'Add Another Family Member',
+                memberNameLabel: 'Family Member\'s Name *',
+                memberNamePlaceholder: 'Enter name',
+                ageLabel: 'Age',
+                unnamed: 'Unnamed'
+            },
+            buttons: {
+                selectAll: 'Select All',
+                deselectAll: 'Deselect All',
+                back: 'Back',
+                next: 'Next Step',
+                addRule: 'Add Rule',
+                print: 'Print Agreement'
+            },
+            custom: {
+                addTitle: 'Add Your Own',
+                addRule: 'Rule',
+                titlePlaceholder: 'Rule Title',
+                reasonPlaceholder: 'Reason (Optional)',
+                defaultSubtitle: 'My Family Custom Rule',
+                defaultTip: 'Tip: Custom rules work best when the whole family agrees on the consequences.'
+            },
+            review: {
+                allFamily: 'All Family',
+                mediaAgreement: 'Media Agreement',
+                mediaPlan: '\'s Media Plan',
+                familyMediaAgreement: 'Family Media Agreement',
+                parentSignature: 'Parent Signature',
+                studentSignature: 'Student Signature',
+                childSignature: 'Child Signature'
+            }
+        }
+    };
+
+    const STEP_ICONS = [
+        { id: 'setup', icon: 'fa-users' },
+        { id: 'balance', icon: 'fa-scale-balanced' },
+        { id: 'communicating', icon: 'fa-comments' },
+        { id: 'kindness', icon: 'fa-hand-holding-heart' },
+        { id: 'privacy', icon: 'fa-lock' },
+        { id: 'zones', icon: 'fa-ban' },
+        { id: 'content', icon: 'fa-mobile-screen-button' },
+        { id: 'together', icon: 'fa-people-roof' },
+        { id: 'review', icon: 'fa-file-signature' }
+    ];
+
+    function App() {
+        const [language, setLanguage] = useState('zh'); // Language state
+        const [currentStepIndex, setCurrentStepIndex] = useState(0);
+        const [familyName, setFamilyName] = useState("");
+        const [family, setFamily] = useState([
+            { id: 1, name: '', role: 'Parent', avatar: 'fa-user-tie', ageGroup: 'adult' }
+        ]);
+        const [selections, setSelections] = useState({});
+        const [showTips, setShowTips] = useState({});
+        const [customStrategies, setCustomStrategies] = useState({});
+        
+        // Filter state for Review Page
+        const [reviewFilter, setReviewFilter] = useState('ALL'); 
+
+        const [newStratTitle, setNewStratTitle] = useState("");
+        const [newStratSub, setNewStratSub] = useState("");
+        
+        // Get translations
+        const t = TRANSLATIONS[language];
+        const STEPS = t.steps.map((step, idx) => ({ ...step, icon: STEP_ICONS[idx].icon }));
+        const AGE_GROUPS = t.ageGroups;
+        const INITIAL_STRATEGIES = t.strategies;
+        
+        const currentStep = STEPS[currentStepIndex];
+
+        // --- Logic ---
+        const isStepComplete = (stepId) => {
+            if (stepId === 'setup') return family.length > 0 && familyName.trim() !== "";
+            if (stepId === 'review') return false; 
+            const staticStrats = INITIAL_STRATEGIES[stepId] || [];
+            const customStrats = customStrategies[stepId] || [];
+            const allStrats = [...staticStrats, ...customStrats];
+            return allStrats.some(strat => selections[strat.id] && selections[strat.id].length > 0);
+        };
+
+        const toggleMember = (strategyId, memberId) => {
+            const current = selections[strategyId] || [];
+            const updated = current.includes(memberId) ? current.filter(id => id !== memberId) : [...current, memberId];
+            setSelections({ ...selections, [strategyId]: updated });
+        };
+
+        // NEW: Toggle All Functionality
+        const toggleAll = (strategyId) => {
+            const currentSelected = selections[strategyId] || [];
+            const allMemberIds = family.map(f => f.id);
+            const isAllSelected = allMemberIds.every(id => currentSelected.includes(id));
+
+            if (isAllSelected) {
+                // Deselect all
+                const newSelections = { ...selections };
+                delete newSelections[strategyId];
+                setSelections(newSelections);
+            } else {
+                // Select all
+                setSelections({ ...selections, [strategyId]: allMemberIds });
+            }
+        };
+
+        const addCustomStrategy = () => {
+            if (!newStratTitle.trim()) return;
+            const stepId = currentStep.id;
+            const newStrat = {
+                id: `custom-${Date.now()}`,
+                title: newStratTitle,
+                subtitle: newStratSub || t.custom.defaultSubtitle,
+                tips: t.custom.defaultTip,
+                isCustom: true
+            };
+            setCustomStrategies({ ...customStrategies, [stepId]: [...(customStrategies[stepId] || []), newStrat] });
+            setNewStratTitle("");
+            setNewStratSub("");
+        };
+
+        const deleteCustomStrategy = (stepId, stratId) => {
+            const currentList = customStrategies[stepId] || [];
+            setCustomStrategies({ ...customStrategies, [stepId]: currentList.filter(s => s.id !== stratId) });
+            const newSelections = {...selections};
+            delete newSelections[stratId];
+            setSelections(newSelections);
+        };
+
+        // --- Components ---
+
+        const StrategyCard = ({ strategy }) => {
+            const selectedMembers = selections[strategy.id] || [];
+            const hasSelection = selectedMembers.length > 0;
+            const isTipsOpen = showTips[strategy.id];
+            
+            const isAllSelected = family.length > 0 && family.every(f => selectedMembers.includes(f.id));
+
+            return (
+                <div className={`card-modern ${hasSelection ? 'selected-card' : ''}`}>
+                    <div className="card-accent-bar"></div>
+                    <div className="card-header-flex">
+                        <div className="card-title-group">
+                            <h3>{strategy.title}</h3>
+                            <p>{strategy.subtitle}</p>
+                        </div>
+                        <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                            <button className="select-all-btn" onClick={() => toggleAll(strategy.id)}>
+                                {isAllSelected ? t.buttons.deselectAll : t.buttons.selectAll}
+                            </button>
+
+                            <button className={`action-pill ${isTipsOpen ? 'active' : ''}`} onClick={() => setShowTips({...showTips, [strategy.id]: !isTipsOpen})}>
+                                <i className="fas fa-lightbulb"></i>
+                            </button>
+                            {strategy.isCustom && (
+                                <button className="action-pill" style={{color:'#D65A31'}} onClick={() => deleteCustomStrategy(currentStep.id, strategy.id)}>
+                                    <i className="fas fa-trash"></i>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    {isTipsOpen && (
+                        <div className="tips-drawer">
+                            <i className="fas fa-info-circle" style={{marginTop:'3px'}}></i>
+                            <div>{strategy.tips}</div>
+                        </div>
+                    )}
+                    <div className="member-grid-modern">
+                        {family.map(mem => (
+                            <div key={mem.id} className={`member-chip ${selectedMembers.includes(mem.id) ? 'selected' : ''}`} onClick={() => toggleMember(strategy.id, mem.id)}>
+                                <div className="chip-avatar"><i className={`fas ${mem.avatar}`}></i></div>
+                                <span>{mem.name || t.setup.unnamed}</span>
+                                <i className="fas fa-check-circle chip-check"></i>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const renderSetup = () => {
+            return (
+                <div style={{maxWidth:'800px', margin:'0 auto'}}>
+                    <div className="form-group">
+                        <label className="form-label">{t.setup.familyNameLabel}</label>
+                        <input 
+                            className="form-input" 
+                            style={{fontSize:'20px', padding:'16px'}}
+                            value={familyName}
+                            onChange={(e) => setFamilyName(e.target.value)}
+                            placeholder={t.setup.familyNamePlaceholder}
+                        />
+                    </div>
+
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px', marginTop:'40px'}}>
+                        <h3 style={{fontSize:'20px', margin:0}}>{t.setup.myFamily}</h3>
+                        <button className="btn btn-outline" style={{fontSize:'13px', padding:'8px 16px'}} onClick={() => setFamily([...family, {id: Date.now(), name:'', role: 'Child', avatar: 'fa-robot', ageGroup: '6-12y'}])}>
+                            <i className="fas fa-plus"></i> {t.setup.addMember}
+                        </button>
+                    </div>
+
+                    {family.map((mem, index) => (
+                        <div key={mem.id} className="setup-card">
+                            {family.length > 1 && (
+                                <i className="fas fa-times remove-member-btn" onClick={() => setFamily(family.filter(f => f.id !== mem.id))}></i>
+                            )}
+                            <div className="setup-avatar-col">
+                                <div className="setup-avatar-circle">
+                                    <i className={`fas ${mem.avatar}`}></i>
+                                </div>
+                            </div>
+                            <div className="setup-info-col">
+                                <div className="form-group">
+                                    <label className="form-label">{t.setup.memberNameLabel}</label>
+                                    <input 
+                                        className="form-input"
+                                        value={mem.name}
+                                        onChange={(e) => {
+                                            const newFam = [...family];
+                                            newFam[index].name = e.target.value;
+                                            setFamily(newFam);
+                                        }}
+                                        placeholder={t.setup.memberNamePlaceholder}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="form-label">{t.setup.ageLabel}</label>
+                                    <div className="age-btn-group">
+                                        {AGE_GROUPS.map(group => (
+                                            <button 
+                                                key={group.id}
+                                                className={`age-btn ${mem.ageGroup === group.id ? 'active' : ''}`}
+                                                onClick={() => {
+                                                    const newFam = [...family];
+                                                    newFam[index].ageGroup = group.id;
+                                                    if(group.id === 'adult') newFam[index].role = 'Parent';
+                                                    else newFam[index].role = 'Child';
+                                                    setFamily(newFam);
+                                                }}
+                                            >
+                                                {group.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const renderReview = () => {
+            const allKeys = Object.keys(INITIAL_STRATEGIES).concat(Object.keys(customStrategies)).reduce((acc, key) => { if (!acc.includes(key)) acc.push(key); return acc; }, []);
+            
+            let reviewTitle = familyName ? `${familyName} ${t.review.mediaAgreement}` : t.review.familyMediaAgreement;
+
+            if (reviewFilter !== 'ALL') {
+                const person = family.find(f => f.id === reviewFilter);
+                if (person) reviewTitle = `${person.name}${t.review.mediaPlan}`;
+            }
+
+            return (
+                <div className="card-modern" style={{padding:'40px 60px', minHeight:'600px'}}>
+                    <div style={{textAlign:'center', borderBottom:'2px solid #F0F0F0', paddingBottom:'20px', marginBottom:'20px'}}>
+                        <div style={{color:'var(--accent)', fontWeight:'bold', letterSpacing:'2px', fontSize:'12px', textTransform:'uppercase'}}>FAMILY MEDIA PLAN</div>
+                        <h1 style={{margin:'10px 0', fontSize:'28px', color:'var(--primary)'}}>{reviewTitle}</h1>
+                        <p style={{color:'#999'}}>{new Date().toLocaleDateString()}</p>
+                    </div>
+
+                    <div className="filter-container no-print">
+                        <button className={`filter-btn ${reviewFilter === 'ALL' ? 'active' : ''}`} onClick={() => setReviewFilter('ALL')}>
+                            <i className="fas fa-users"></i> {t.review.allFamily}
+                        </button>
+                        {family.map(mem => (
+                            <button key={mem.id} className={`filter-btn ${reviewFilter === mem.id ? 'active' : ''}`} onClick={() => setReviewFilter(mem.id)}>
+                                <i className={`fas ${mem.avatar}`}></i> {mem.name || t.setup.unnamed}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="agreement-content">
+                        {allKeys.map(key => {
+                            const staticList = INITIAL_STRATEGIES[key] || [];
+                            const customList = customStrategies[key] || [];
+                            const allStrats = [...staticList, ...customList];
+                            
+                            const activeStrats = allStrats.filter(s => {
+                                const assigned = selections[s.id] || [];
+                                if (assigned.length === 0) return false;
+                                if (reviewFilter === 'ALL') return true;
+                                return assigned.includes(reviewFilter);
+                            });
+                            
+                            if (activeStrats.length === 0) return null;
+                            
+                            // Find category label
+                            const stepObj = STEPS.find(step => step.id === key);
+                            const categoryLabel = stepObj ? stepObj.label : key;
+                            
+                            return (
+                                <div key={key} style={{marginBottom:'30px', pageBreakInside: 'avoid'}}>
+                                    <h4 style={{color:'var(--accent)', textTransform:'uppercase', fontSize:'12px', borderBottom:'1px solid #eee', paddingBottom:'5px'}}>{categoryLabel}</h4>
+                                    {activeStrats.map(s => (
+                                        <div key={s.id} style={{display:'flex', justifyContent:'space-between', marginBottom:'12px', alignItems:'flex-start'}}>
+                                            <div style={{flex:1, paddingRight:'10px'}}>
+                                                <div style={{fontWeight:'600', color:'#333'}}>{s.title}</div>
+                                                <div style={{fontSize:'13px', color:'#777'}}>{s.subtitle}</div>
+                                            </div>
+                                            <div style={{flex:1, display:'flex', flexWrap:'wrap', gap:'5px', justifyContent:'flex-end'}}>
+                                                {reviewFilter === 'ALL' ? (
+                                                    selections[s.id].map(mid => {
+                                                        const m = family.find(f => f.id === mid);
+                                                        return m ? <span key={mid} className="review-badge">{m.name}</span> : null
+                                                    })
+                                                ) : (
+                                                    <i className="fas fa-check" style={{color:'var(--success)'}}></i>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )
+                        })}
+                    </div>
+                    
+                    <div style={{marginTop:'60px', display:'flex', gap:'40px', pageBreakInside: 'avoid'}}>
+                        <div style={{flex:1, borderTop:'1px solid #333', paddingTop:'10px', fontSize:'14px', color:'#666'}}>{t.review.parentSignature}</div>
+                        <div style={{flex:1, borderTop:'1px solid #333', paddingTop:'10px', fontSize:'14px', color:'#666'}}>
+                            {reviewFilter !== 'ALL' && reviewFilter !== 'Parent' ? t.review.childSignature : t.review.studentSignature}
+                        </div>
+                    </div>
+                    <div style={{textAlign:'center', marginTop:'40px'}} className="no-print">
+                        <button className="btn btn-primary" onClick={() => window.print()}><i className="fas fa-print"></i> {t.buttons.print}</button>
+                    </div>
+                </div>
+            );
+        };
+
+        return (
+            <div className="app-layout">
+                <div className="sidebar">
+                    <div className="brand-area">
+                        <div className="brand-title">{t.brandTitle}</div>
+                        <div className="brand-subtitle">{t.brandSubtitle}</div>
+                    </div>
+                    <div className="nav-list">
+                        {STEPS.map((step, idx) => {
+                            const completed = isStepComplete(step.id);
+                            const isActive = idx === currentStepIndex;
+                            const displayIcon = completed ? "fa-check" : step.icon;
+                            return (
+                                <div key={step.id} className={`nav-item ${isActive ? 'active' : ''} ${completed ? 'completed' : ''}`} onClick={() => setCurrentStepIndex(idx)}>
+                                    <div className="icon-wrapper"><i className={`fas ${displayIcon}`}></i></div>
+                                    {step.label}
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className="lang-toggle">
+                        <button className="lang-btn" onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}>
+                            <i className="fas fa-globe"></i>
+                            {t.langButton}
+                        </button>
+                    </div>
+                </div>
+                <div className="main-content">
+                    <div className="content-header">
+                        <div className="step-heading"><i className={`fas ${currentStep.icon}`}></i>{currentStep.label}</div>
+                        <div className="step-desc">{currentStep.desc}</div>
+                    </div>
+                    
+                    {currentStep.id === 'setup' ? renderSetup() : 
+                     currentStep.id === 'review' ? renderReview() : (
+                        <div className="strategy-container">
+                            {(INITIAL_STRATEGIES[currentStep.id] || []).map(s => <StrategyCard key={s.id} strategy={s} />)}
+                            {(customStrategies[currentStep.id] || []).map(s => <StrategyCard key={s.id} strategy={s} />)}
+                            <div className="add-custom-wrapper">
+                                <div className="add-title"><i className="fas fa-plus-circle"></i> {t.custom.addTitle} {currentStep.label} {t.custom.addRule}</div>
+                                <input className="custom-input" placeholder={t.custom.titlePlaceholder} value={newStratTitle} onChange={e => setNewStratTitle(e.target.value)} />
+                                <input className="custom-input" placeholder={t.custom.reasonPlaceholder} value={newStratSub} onChange={e => setNewStratSub(e.target.value)} />
+                                <button className="btn btn-primary" style={{padding:'8px 20px', fontSize:'13px'}} onClick={addCustomStrategy} disabled={!newStratTitle.trim()}>{t.buttons.addRule}</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <div className="bottom-bar">
+                    <button className="btn btn-ghost" disabled={currentStepIndex === 0} onClick={() => setCurrentStepIndex(curr => Math.max(0, curr - 1))}>{t.buttons.back}</button>
+                    {currentStepIndex < STEPS.length - 1 && <button className="btn btn-primary" onClick={() => setCurrentStepIndex(curr => Math.min(STEPS.length - 1, curr + 1))}>{t.buttons.next} <i className="fas fa-arrow-right" style={{marginLeft:'8px'}}></i></button>}
+                </div>
+            </div>
+        );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+
+</body>
+</html>
